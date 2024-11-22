@@ -1,0 +1,68 @@
+from fastapi import FastAPI, Request
+from pydantic import BaseModel
+
+app = FastAPI()
+
+# Base de Dados Simulada
+data_storage = {}
+
+# Modelos de Dados
+class Municipio(BaseModel):
+    nome: str
+    estado: str
+    objetivos: str = None
+    desafios: str = None
+    recursos: dict = None
+    impactos: list = None
+    vulnerabilidades: list = None
+    plano_acao: dict = None
+    monitoramento: dict = None
+
+@app.post("/municipio/iniciar")
+async def iniciar_municipio(municipio: Municipio):
+    data_storage[municipio.nome] = municipio.dict()
+    return {"message": f"Município {municipio.nome} iniciado com sucesso!", "data": municipio}
+
+@app.get("/municipio/{nome}/etapa/{etapa}")
+async def acompanhar_etapa(nome: str, etapa: int):
+    if nome not in data_storage:
+        return {"error": "Município não encontrado"}
+    municipio = data_storage[nome]
+    if etapa == 1:
+        return {"etapa": "Preparação e Engajamento", "status": municipio.get("recursos")}
+    elif etapa == 2:
+        return {"etapa": "Análise de Impactos e Vulnerabilidades", "status": municipio.get("impactos")}
+    elif etapa == 3:
+        return {"etapa": "Elaboração do PLAC", "status": municipio.get("plano_acao")}
+    elif etapa == 4:
+        return {"etapa": "Implementação e Monitoramento", "status": municipio.get("monitoramento")}
+    return {"error": "Etapa inválida"}
+
+@app.post("/municipio/{nome}/atualizar")
+async def atualizar_municipio(nome: str, dados: dict):
+    if nome not in data_storage:
+        return {"error": "Município não encontrado"}
+    data_storage[nome].update(dados)
+    return {"message": f"Dados atualizados para o município {nome}", "data": data_storage[nome]}
+
+@app.get("/municipio/{nome}/gerar_plac")
+async def gerar_plac(nome: str):
+    if nome not in data_storage:
+        return {"error": "Município não encontrado"}
+    municipio = data_storage[nome]
+    return {
+        "message": f"Plano Local de Ação Climática para {nome} gerado!",
+        "PLACA": {
+            "objetivos": municipio.get("objetivos"),
+            "desafios": municipio.get("desafios"),
+            "recursos": municipio.get("recursos"),
+            "impactos": municipio.get("impactos"),
+            "vulnerabilidades": municipio.get("vulnerabilidades"),
+            "plano_acao": municipio.get("plano_acao"),
+            "monitoramento": municipio.get("monitoramento"),
+        }
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
