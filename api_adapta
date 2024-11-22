@@ -1,0 +1,21 @@
+import requests
+
+class AdaptaBrasilAPI:
+    def __init__(self, api_key):
+        self.base_url = "https://api.adaptabrasil.mcti.gov.br"
+        self.headers = {"Authorization": f"Bearer {api_key}"}
+    
+    def get_climate_data(self, municipio):
+        endpoint = f"{self.base_url}/dados-climaticos"
+        params = {"municipio": municipio}
+        response = requests.get(endpoint, headers=self.headers, params=params)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"error": "Erro ao consultar os dados do AdaptaBrasil"}
+
+# Exemplo de uso
+api_key = "sua_api_key"
+adapta_brasil = AdaptaBrasilAPI(api_key)
+dados_climaticos = adapta_brasil.get_climate_data("São Paulo")
+print(dados_climaticos)
